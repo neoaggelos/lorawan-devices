@@ -2,7 +2,6 @@ vendors:
   - id: example
     name: Example
     vendorID: 0
-    draft: true
 
   - id: 1m2m
     name: 1M2M
