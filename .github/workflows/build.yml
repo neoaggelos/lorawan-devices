@@ -1,0 +1,52 @@
+name: Build
+on:
+  push:
+    paths:
+      - vendor/**
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build Device Repository package file for The Things Stack
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.TOKEN }}
+    # TODO: Use Docker once The Things Stack 3.11 is released.
+    # - name: Generate package
+    #   run: |
+    #     docker run --rm \
+    #       -v $PWD:/data \
+    #       -v /tmp:/output \
+    #       thethingsnetwork/lorawan-stack:3.11.0 \
+    #       ttn-lw-stack dr create-package \
+    #       --source /data --output /output/package.zip
+    - name: (tmp) Set up Go 1.15
+      uses: actions/setup-go@v2
+      with:
+        go-version: '~1.15'
+    - name: (tmp) Build ttn-lw-stack
+      run: |
+        git clone https://github.com/TheThingsNetwork/lorawan-stack
+        cd lorawan-stack
+        git fetch origin feature/device-repo-store
+        git checkout feature/device-repo-store
+        go build -o ../ttn-lw-stack ./cmd/ttn-lw-stack
+        cd ..
+        rm -rf lorawan-stack
+    - name: Build package.zip
+      run: |
+        ./ttn-lw-stack dr create-package \
+          --source $PWD --output /tmp/package.zip --overwrite --log.level debug
+    - name: Push new package.zip
+      run: |
+        git fetch origin package/v3.11
+        git checkout package/v3.11
+        git config --global user.name 'tti-ci'
+        git config --global user.email 'stack@thethingsindustries.com'
+        mv /tmp/package.zip package.zip
+        git add package.zip
+        git commit -m 'Updated package'
+        git push origin package/v3.11

@@ -1,6 +1,7 @@
 name: Wind Sensor
 description: Wind Sensor with controllable LED
 
+
 # Hardware versions (optional, use when you have revisions)
 hardwareVersions:
   - version: '1.0'
